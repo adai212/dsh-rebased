@@ -8,6 +8,7 @@ This repository currently contains the first read-only Git status increment. It 
 - a DSH browser client entry (`lib/client.js`)
 - a host JSON API for Git executable detection and repository status snapshots
 - a core Git process and repository discovery layer
-- a visible `Git` sidebar footer entry that reads the active session repository state
+- a read-only changes model with staged, unstaged, untracked, renamed, deleted, and conflicted groups
+- a visible `Git` sidebar footer entry that reads the active session repository state and opens the changes view
 
 See `ROADMAP.md` for the staged implementation plan and `docs/DEVELOPMENT.md` for how to check, preview, and install the plugin locally.

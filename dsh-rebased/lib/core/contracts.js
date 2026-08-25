@@ -21,6 +21,15 @@ export const GitRepositoryState = Object.freeze({
 });
 
 export function createEmptyRepositorySnapshot(root = null) {
+  const emptyGroups = Object.freeze({
+    conflicted: Object.freeze([]),
+    staged: Object.freeze([]),
+    unstaged: Object.freeze([]),
+    untracked: Object.freeze([]),
+    renamed: Object.freeze([]),
+    deleted: Object.freeze([]),
+  });
+
   return Object.freeze({
     id: null,
     root,
@@ -33,6 +42,11 @@ export function createEmptyRepositorySnapshot(root = null) {
       unstaged: 0,
       untracked: 0,
       conflicted: 0,
+    }),
+    changes: Object.freeze({
+      groups: emptyGroups,
+      total: 0,
+      sampleLimit: 500,
     }),
     repositories: Object.freeze([]),
     capabilities: Object.freeze({

@@ -15,7 +15,7 @@ export class DshGitPluginRuntime {
   getSnapshot() {
     return Object.freeze({
       phase: this.#phase,
-      capabilities: Object.freeze(["git-executable", "repository-discovery", "repository-status"]),
+      capabilities: Object.freeze(["git-executable", "repository-discovery", "repository-status", "changes-model"]),
       config: this.#config,
     });
   }

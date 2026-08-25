@@ -93,8 +93,44 @@ This file is the project handoff ledger. Read it before starting new work, and u
   - Only the first discovered repository is displayed when the cwd is a container with multiple child repositories.
   - The footer entry is a compact status surface, not the final Git panel.
   - Status refresh is mount/click driven; file watching and debounced automatic refresh are not implemented yet.
+- User confirmation: confirmed on 2026-08-25.
+
+### 2026-08-25: Read-Only Changes Model
+
+- Status: implemented.
+- Scope: added a read-only changes model derived from porcelain status with staged, unstaged, untracked, renamed, deleted, and conflicted groups; added a visible changes view opened from the footer Git entry through a better-sidebar tab when that service is available.
+- Changed areas:
+  - `D:\AI\dsh-rebased\dsh-rebased\README.md`
+  - `D:\AI\dsh-rebased\dsh-rebased\docs\DEVELOPMENT.md`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\client.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\contracts.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\index.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\repository.js`
+- Follow-up corrections:
+  - Removed the self-invented footer popover fallback after user feedback; it was not derived from JetBrains Rebased.
+  - Updated the changes panel styles to use DSH theme variables with dark-mode-safe fallbacks.
+  - Confirmed from available local context that `workspaces.openPath` opens OS paths and `sessions.open` switches sessions; neither is a confirmed DSH center-tab API.
+  - User reported DSH Desktop opens again after disabling `dsh-rebased`; the desktop profile is currently left with `dsh-rebased` disabled.
+  - Identified two likely startup blockers from static inspection: duplicate plugin activation if `dsh-rebased` is loaded from both `dsh.profile.bundles` and the profile Cordis patch, and an outdated client `locale.register` call signature.
+  - Updated the client to register locale dictionaries with the current DSH/better-sidebar signature and to declare `betterSidebar` as an injected client service before registering the changes tab.
+  - Updated development notes to require only one `dsh-rebased` activation path during local development.
+- Manual test checklist:
+  - Restart DSH Desktop so host/client code reloads.
+  - Open a DSH session whose cwd is inside a Git repository.
+  - Create one untracked file, edit one tracked file without staging, stage one changed file, rename one tracked file, and delete one tracked file.
+  - Click the footer `Git` entry.
+  - If `dsh-better-sidebar` is active, confirm the changes view opens as a `Git Changes` / `Git 变更` sidebar tab.
+  - Confirm changed files appear in the expected groups: staged, unstaged, untracked, renamed, deleted, and conflicted when the repo has unresolved conflicts.
+  - Confirm `MM` style files can appear in both staged and unstaged groups.
+  - Confirm the view has a refresh button and that clicking it reflects new file changes.
+  - Confirm no stage, unstage, commit, checkout, pull, push, or destructive Git action is exposed in this increment.
+- Known limitations:
+  - The changes view is read-only; file row click actions and diffs are not implemented yet.
+  - The full Git panel is not yet integrated into a DSH center-area tab because a confirmed public center-tab host API has not been identified in the local references.
+  - The model returns up to 500 files per group for display.
+  - Automatic file watching/debounced refresh is not implemented yet.
 - User confirmation: pending.
 
 ## Next Planned Capability
 
-Wait for user confirmation of the read-only repository status checkpoint in DSH before starting the next capability.
+Wait for user confirmation of the read-only changes model checkpoint in DSH before starting the next capability.

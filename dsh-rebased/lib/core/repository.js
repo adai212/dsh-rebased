@@ -8,6 +8,7 @@ const DISCOVERY_LIMIT = 200;
 const DISCOVERY_TIMEOUT_MS = 5_000;
 const STATUS_TIMEOUT_MS = 15_000;
 const STATUS_LIMIT = 2_000;
+const CHANGE_SAMPLE_LIMIT = 500;
 
 export function createRepositoryId(root) {
   const normalized = pathIdentity(root);
@@ -89,14 +90,123 @@ function parsePorcelainZ(output) {
 
     const xy = token.slice(0, 2);
     const path = token.slice(3);
-    entries.push({ xy, path });
+    let originalPath = null;
 
     if ((xy[0] === "R" || xy[0] === "C") && tokens[index]) {
+      originalPath = tokens[index];
       index += 1;
     }
+
+    entries.push({ xy, path, originalPath });
   }
 
   return entries;
+}
+
+function badgeOf(entry) {
+  const index = entry.xy[0];
+  const worktree = entry.xy[1];
+  if (index !== undefined && index !== " " && index !== "?") return index;
+  if (worktree !== undefined && worktree !== " " && worktree !== "?") return worktree;
+  return "?";
+}
+
+function isConflicted(entry) {
+  const index = entry.xy[0];
+  const worktree = entry.xy[1];
+  return index === "U" || worktree === "U" || (index === "A" && worktree === "A") || (index === "D" && worktree === "D");
+}
+
+function isStaged(entry) {
+  const index = entry.xy[0];
+  return index !== undefined && index !== " " && index !== "?";
+}
+
+function isUnstaged(entry) {
+  if (entry.xy === "??") return true;
+  const worktree = entry.xy[1];
+  return worktree !== undefined && worktree !== " " && worktree !== "?";
+}
+
+function isDeleted(entry) {
+  return entry.xy[0] === "D" || entry.xy[1] === "D";
+}
+
+function isRenamed(entry) {
+  return entry.xy[0] === "R" || entry.xy[1] === "R";
+}
+
+function createChange(entry, group, staged) {
+  return Object.freeze({
+    path: entry.path,
+    originalPath: entry.originalPath,
+    status: entry.xy,
+    badge: badgeOf(entry),
+    group,
+    staged,
+  });
+}
+
+function createChangeGroups(entries) {
+  const groups = {
+    conflicted: [],
+    staged: [],
+    unstaged: [],
+    untracked: [],
+    renamed: [],
+    deleted: [],
+  };
+
+  for (const entry of entries) {
+    if (isConflicted(entry)) {
+      groups.conflicted.push(createChange(entry, "conflicted", false));
+      continue;
+    }
+
+    if (entry.xy === "??") {
+      groups.untracked.push(createChange(entry, "untracked", false));
+      groups.unstaged.push(createChange(entry, "unstaged", false));
+      continue;
+    }
+
+    if (isRenamed(entry)) {
+      groups.renamed.push(createChange(entry, "renamed", isStaged(entry)));
+    }
+
+    if (isDeleted(entry)) {
+      groups.deleted.push(createChange(entry, "deleted", isStaged(entry)));
+    }
+
+    if (isStaged(entry)) {
+      groups.staged.push(createChange(entry, "staged", true));
+    }
+
+    if (isUnstaged(entry)) {
+      groups.unstaged.push(createChange(entry, "unstaged", false));
+    }
+  }
+
+  return Object.freeze(Object.fromEntries(
+    Object.entries(groups).map(([name, changes]) => [
+      name,
+      Object.freeze(changes.slice(0, CHANGE_SAMPLE_LIMIT).map((change) => Object.freeze(change))),
+    ]),
+  ));
+}
+
+function emptyChangeModel() {
+  return Object.freeze({
+    groups: Object.freeze({
+      conflicted: Object.freeze([]),
+      staged: Object.freeze([]),
+      unstaged: Object.freeze([]),
+      untracked: Object.freeze([]),
+      renamed: Object.freeze([]),
+      deleted: Object.freeze([]),
+    }),
+    total: 0,
+    sampleLimit: CHANGE_SAMPLE_LIMIT,
+  });
 }
 
 function summarizeStatus(entries) {
@@ -116,7 +226,7 @@ function summarizeStatus(entries) {
       continue;
     }
 
-    if (index === "U" || worktree === "U" || (index === "A" && worktree === "A") || (index === "D" && worktree === "D")) {
+    if (isConflicted(entry)) {
       counts.conflicted += 1;
       continue;
     }
@@ -212,6 +322,7 @@ async function createRepositorySnapshot(root, allRoots) {
   const entries = parsePorcelainZ(statusRaw.stdout);
   const truncated = entries.length > STATUS_LIMIT;
   const counts = summarizeStatus(entries);
+  const groups = createChangeGroups(entries);
   const state = operation.operation !== null ? GitRepositoryState.Operating : repositoryStateFromCounts(counts);
 
   return Object.freeze({
@@ -225,7 +336,12 @@ async function createRepositorySnapshot(root, allRoots) {
     repositories: Object.freeze(allRoots.map((candidate) => Object.freeze({ id: createRepositoryId(candidate), root: candidate }))),
     capabilities,
     operation: operation.operation,
-    sampleChanges: Object.freeze(entries.slice(0, 20).map((entry) => Object.freeze({ path: entry.path, status: entry.xy }))),
+    changes: Object.freeze({
+      groups,
+      total: entries.length,
+      sampleLimit: CHANGE_SAMPLE_LIMIT,
+    }),
+    sampleChanges: Object.freeze(entries.slice(0, 20).map((entry) => Object.freeze({ path: entry.path, originalPath: entry.originalPath, status: entry.xy }))),
     truncated,
   });
 }
@@ -242,6 +358,7 @@ export async function createGitWorkspaceSnapshot(cwd) {
         head: null,
         upstream: null,
         counts: Object.freeze({ staged: 0, unstaged: 0, untracked: 0, conflicted: 0 }),
+        changes: emptyChangeModel(),
       }),
     });
   }
@@ -260,6 +377,7 @@ export async function createGitWorkspaceSnapshot(cwd) {
           head: null,
           upstream: null,
           counts: Object.freeze({ staged: 0, unstaged: 0, untracked: 0, conflicted: 0 }),
+          changes: emptyChangeModel(),
         }),
       });
     }
@@ -277,6 +395,7 @@ export async function createGitWorkspaceSnapshot(cwd) {
         upstream: null,
         counts: Object.freeze({ staged: 0, unstaged: 0, untracked: 0, conflicted: 0 }),
         repositories: Object.freeze([]),
+        changes: emptyChangeModel(),
       }),
     });
   }
