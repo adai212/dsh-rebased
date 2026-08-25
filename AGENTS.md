@@ -24,3 +24,6 @@ The project goal is to replace the hard-to-use Git module in `dsh-better-sidebar
 - After completing each capability, stop and provide a focused manual test checklist for the user.
 - Do not continue to the next capability until the user has manually tested the current one and confirmed the result.
 - The checklist must state what should be tested in DSH, what the expected visible behavior is, and any known limitations of that increment.
+- Maintain project progress in `D:\AI\dsh-rebased\dsh-rebased\PROGRESS.md`.
+- Before starting a new capability, read `PROGRESS.md` and avoid repeating already completed or user-confirmed work.
+- After finishing any capability or scaffold checkpoint, update `PROGRESS.md` with the status, changed areas, manual test checklist, and user confirmation state.

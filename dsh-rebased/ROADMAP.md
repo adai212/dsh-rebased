@@ -32,6 +32,8 @@ Each checkpoint must include:
 - Expected command/output side effects, if any.
 - Known limitations for that increment.
 
+Progress must be recorded in `PROGRESS.md` after every checkpoint. A new session must read `PROGRESS.md` before planning or coding so already completed capabilities are not repeated.
+
 ## Priority 0: Foundation
 
 1. Project skeleton
