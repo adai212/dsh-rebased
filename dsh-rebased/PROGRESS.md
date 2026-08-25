@@ -65,6 +65,36 @@ This file is the project handoff ledger. Read it before starting new work, and u
   - Confirm the visible scaffold entry appears in the sidebar footer area.
 - User confirmation: pending.
 
+### 2026-08-25: Read-Only Repository Status
+
+- Status: implemented.
+- Scope: added the first functional Git capability: Git executable detection, repository discovery from the active session cwd, current branch/HEAD/upstream snapshot, basic repository capability flags, operation-state detection, porcelain status counting, and a sidebar footer status display with manual refresh.
+- Changed areas:
+  - `D:\AI\dsh-rebased\dsh-rebased\package.json`
+  - `D:\AI\dsh-rebased\dsh-rebased\README.md`
+  - `D:\AI\dsh-rebased\dsh-rebased\docs\DEVELOPMENT.md`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\index.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\host-api.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\client.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\index.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\contracts.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\git-process.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\core\repository.js`
+  - `D:\AI\dsh-rebased\dsh-rebased\lib\ui-model\sidebar.js`
+- Manual test checklist:
+  - Restart DSH Desktop so the host route and client entry reload.
+  - Open or create a DSH session whose cwd is inside a Git repository.
+  - Confirm the sidebar footer `Git` entry no longer says `Plugin scaffold` / `插件框架`.
+  - Confirm it shows `Clean` / `干净` for a clean repo, or `Changes` / `有改动` with counts after editing or creating a file.
+  - Click the `Git` entry after changing a file and confirm the status refreshes.
+  - Open or create a DSH session in a non-Git directory and confirm the entry shows `Not a Git repository` / `不是 Git 仓库`.
+  - Confirm no stage, unstage, commit, checkout, pull, push, or destructive Git action is exposed in this increment.
+- Known limitations:
+  - Only the first discovered repository is displayed when the cwd is a container with multiple child repositories.
+  - The footer entry is a compact status surface, not the final Git panel.
+  - Status refresh is mount/click driven; file watching and debounced automatic refresh are not implemented yet.
+- User confirmation: pending.
+
 ## Next Planned Capability
 
-Wait for user confirmation of the scaffold in DSH before starting the next capability.
+Wait for user confirmation of the read-only repository status checkpoint in DSH before starting the next capability.

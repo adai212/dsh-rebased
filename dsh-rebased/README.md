@@ -2,11 +2,12 @@
 
 DSH Git plugin inspired by JetBrains Rebased / IntelliJ Git UX and architecture.
 
-This repository currently contains the plugin scaffold only. It registers:
+This repository currently contains the first read-only Git status increment. It registers:
 
 - a DSH host plugin entry (`lib/index.js`)
 - a DSH browser client entry (`lib/client.js`)
-- placeholder core/runtime contracts
-- a visible disabled `Git` sidebar footer entry for smoke-checking installation
+- a host JSON API for Git executable detection and repository status snapshots
+- a core Git process and repository discovery layer
+- a visible `Git` sidebar footer entry that reads the active session repository state
 
-See `ROADMAP.md` for the staged implementation plan and `docs/DEVELOPMENT.md` for how to check, preview, and install the scaffold locally.
+See `ROADMAP.md` for the staged implementation plan and `docs/DEVELOPMENT.md` for how to check, preview, and install the plugin locally.

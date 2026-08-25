@@ -22,6 +22,7 @@ export const GitRepositoryState = Object.freeze({
 
 export function createEmptyRepositorySnapshot(root = null) {
   return Object.freeze({
+    id: null,
     root,
     state: GitRepositoryState.Unknown,
     branch: null,
@@ -33,5 +34,14 @@ export function createEmptyRepositorySnapshot(root = null) {
       untracked: 0,
       conflicted: 0,
     }),
+    repositories: Object.freeze([]),
+    capabilities: Object.freeze({
+      hasRemote: false,
+      hasUpstream: false,
+      isShallow: false,
+      isBare: false,
+      isSubmodule: false,
+    }),
+    operation: null,
   });
 }

@@ -1,7 +1,7 @@
 {
   "name": "dsh-rebased",
   "version": "0.0.0-dev.0",
-  "description": "DSH Git plugin scaffold inspired by JetBrains Git workflows.",
+  "description": "DSH Git plugin inspired by JetBrains Git workflows.",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
@@ -28,7 +28,7 @@
     "ROADMAP.md"
   ],
   "scripts": {
-    "check:syntax": "node --check lib/index.js && node --check lib/core/index.js && node --check lib/core/contracts.js && node --check lib/ui-model/index.js && node --check lib/ui-model/sidebar.js",
+    "check:syntax": "node --check lib/index.js && node --check lib/host-api.js && node --check lib/core/index.js && node --check lib/core/contracts.js && node --check lib/core/git-process.js && node --check lib/core/repository.js && node --check lib/ui-model/index.js && node --check lib/ui-model/sidebar.js",
     "check:client-syntax": "node --check lib/client.js"
   },
   "dsh": {

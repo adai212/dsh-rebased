@@ -15,7 +15,7 @@ export class DshGitPluginRuntime {
   getSnapshot() {
     return Object.freeze({
       phase: this.#phase,
-      capabilities: Object.freeze([]),
+      capabilities: Object.freeze(["git-executable", "repository-discovery", "repository-status"]),
       config: this.#config,
     });
   }
@@ -38,3 +38,6 @@ export class GitPluginError extends Error {
     this.code = code;
   }
 }
+
+export { GitCommandError, detectGitExecutable, runGit } from "./git-process.js";
+export { createGitWorkspaceSnapshot, createRepositoryId, discoverRepositoryRoots } from "./repository.js";

@@ -1,7 +1,8 @@
 import { DshGitPluginRuntime } from "./core/index.js";
+import { registerHostApi } from "./host-api.js";
 
 export const name = "dsh-rebased";
-export const inject = [];
+export const inject = ["webServer", "sessions"];
 
 const DEFAULT_CONFIG = Object.freeze({
   enabled: true,
@@ -25,12 +26,15 @@ export function apply(ctx, config = {}) {
   const runtime = new DshGitPluginRuntime(resolved);
 
   ctx.effect(() => {
-    ctx.logger?.info?.("[dsh-rebased] Git plugin scaffold mounted");
+    const disposeApi = registerHostApi(ctx);
+    runtime.markReady();
+    ctx.logger?.info?.("[dsh-rebased] Git repository status API mounted");
     return () => {
+      disposeApi();
       runtime.dispose();
-      ctx.logger?.info?.("[dsh-rebased] Git plugin scaffold disposed");
+      ctx.logger?.info?.("[dsh-rebased] Git repository status API disposed");
     };
-  }, "dsh-rebased: host lifecycle");
+  }, "dsh-rebased: host repository status API");
 }
 
 export { DshGitPluginRuntime };

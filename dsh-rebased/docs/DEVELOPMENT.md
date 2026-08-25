@@ -2,15 +2,17 @@
 
 ## Current Scope
 
-This is only the DSH plugin scaffold. It deliberately does not run Git commands yet.
+This is the first read-only Git status increment. It runs Git commands only through the plugin host API and does not expose write operations yet.
 
 What exists now:
 
 - Host entry: `lib/index.js`
 - Browser client entry: `lib/client.js`
-- Core runtime placeholder: `lib/core/index.js`
-- Git domain contracts placeholder: `lib/core/contracts.js`
-- Sidebar UI model placeholder: `lib/ui-model/sidebar.js`
+- Host API route: `lib/host-api.js`
+- Git process layer: `lib/core/git-process.js`
+- Repository discovery/status layer: `lib/core/repository.js`
+- Core runtime contracts: `lib/core/index.js` and `lib/core/contracts.js`
+- Sidebar UI model: `lib/ui-model/sidebar.js`
 - DSH bundle patch: `cordis.patch.yml`
 
 ## Local Checks
@@ -25,7 +27,7 @@ npm.cmd run check:syntax
 npm.cmd run check:client-syntax
 ```
 
-The checks only parse the scaffold JavaScript. They do not start DSH and do not test Git behavior.
+The checks only parse JavaScript. They do not start DSH and do not verify Git behavior.
 
 ## How To See The Effect In DSH
 
@@ -55,9 +57,11 @@ For a development install, add this package to the DSH desktop profile and inser
 
 Expected visible result:
 
-- A disabled `Git` entry appears in the sidebar footer area.
-- The entry says `Plugin scaffold` in English locales or `插件框架` in Chinese locales.
-- No Git operation should be available yet.
+- A `Git` entry appears in the sidebar footer area.
+- In a Git repository session, the entry shows a clean/dirty/conflict status plus the repository or change-count summary.
+- In a non-Git directory, the entry shows `Not a Git repository` or `不是 Git 仓库`.
+- Clicking the entry refreshes the read-only snapshot.
+- No Git write operation should be available yet.
 
 ## Alternative Bundle-Style Install
 
@@ -67,10 +71,6 @@ The package includes `dsh.bundle.patch` in `package.json`, pointing to `cordis.p
 
 Remove the `dsh-rebased` dependency and the `dsh-rebased` Cordis patch entry from the profile, then restart DSH Desktop.
 
-## Next Framework Step
+## Next Functional Step
 
-Before implementing real Git behavior, confirm:
-
-- Which DSH sidebar slot should own the final Git surface: footer action, workspaces replacement, a new details panel, or a custom slot declared by this plugin.
-- Whether the plugin should coexist with `dsh-better-sidebar` first or replace its Git module directly.
-- Which DSH services should back host operations: filesystem, subprocess, workspace, notifications, and settings.
+After the read-only status checkpoint is manually confirmed in DSH, continue with the changes model: staged, unstaged, untracked, deleted, renamed, and conflicted groups.
