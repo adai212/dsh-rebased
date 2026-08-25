@@ -1,0 +1,8 @@
+# DSH bundle patch for the dsh-rebased Git plugin.
+# During local development, either add this package as a profile bundle or copy
+# the insert entry below into the profile's cordis.patch.yml.
+- insert:
+    - id: dsh-rebased
+      name: dsh-rebased
+      config:
+        enabled: true
