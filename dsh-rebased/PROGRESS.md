@@ -131,6 +131,23 @@ This file is the project handoff ledger. Read it before starting new work, and u
   - Automatic file watching/debounced refresh is not implemented yet.
 - User confirmation: pending.
 
+### 2026-08-25: Git UI Design Preview
+
+- Status: implemented.
+- Scope: added a static HTML design preview for the intended Git workbench direction before continuing implementation.
+- Changed areas:
+  - `D:\AI\dsh-rebased\dsh-rebased\docs\git-ui-design-preview.html`
+  - `D:\AI\dsh-rebased\dsh-rebased\PROGRESS.md`
+- Manual test checklist:
+  - Open `D:\AI\dsh-rebased\dsh-rebased\docs\git-ui-design-preview.html` in a browser.
+  - Confirm the target direction matches the expected DSH Git workflow: sidebar Git entry, changes tree, diff viewer, commit box, branch context, log context, and conflict visibility.
+  - Confirm whether this should be the design target for future implementation increments.
+  - Note any layout, wording, density, color, or workflow concerns before implementation continues.
+- Known limitations:
+  - This is a static preview only; no Git command, DSH integration, tab switching, staging, diff, commit, branch, pull, push, or log behavior is implemented by this file.
+  - It uses illustrative repository data based on the current roadmap and progress ledger.
+- User confirmation: pending.
+
 ## Next Planned Capability
 
-Wait for user confirmation of the read-only changes model checkpoint in DSH before starting the next capability.
+Wait for user confirmation of the read-only changes model checkpoint and the Git UI design preview before starting the next capability.

@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dsh-rebased Git UI Design Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --app: #151515;
+      --rail: #1d1d1d;
+      --panel: #232323;
+      --panel-2: #2b2b2b;
+      --line: #3a3a3a;
+      --line-soft: #303030;
+      --text: #eeeeec;
+      --muted: #b4b4ae;
+      --dim: #84847d;
+      --green: #47d18c;
+      --green-bg: rgba(71, 209, 140, .13);
+      --blue: #79a7ff;
+      --blue-bg: rgba(121, 167, 255, .13);
+      --amber: #e7b85c;
+      --amber-bg: rgba(231, 184, 92, .14);
+      --red: #f26d6d;
+      --red-bg: rgba(242, 109, 109, .13);
+      --violet: #b895ff;
+      --violet-bg: rgba(184, 149, 255, .13);
+      --focus: #9fc8ff;
+      --shadow: 0 18px 48px rgba(0, 0, 0, .34);
+      font-family: "Aptos", "Segoe UI Variable", "Microsoft YaHei UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--app);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    ::selection {
+      background: rgba(121, 167, 255, .34);
+      color: var(--text);
+    }
+
+    ::-webkit-scrollbar {
+      width: 11px;
+      height: 11px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #181818;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #4a4a46;
+      border: 3px solid #181818;
+      border-radius: 9px;
+    }
+
+    .app-shell {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 56px 258px minmax(660px, 1fr);
+      background: var(--app);
+    }
+
+    .activity {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 8px;
+      border-right: 1px solid var(--line-soft);
+      background: #171717;
+    }
+
+    .activity__spacer {
+      flex: 1;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .icon-button:hover,
+    .icon-button[data-active="true"] {
+      background: #2b2b2b;
+      color: var(--text);
+    }
+
+    .icon-button[data-alert="true"] {
+      color: var(--amber);
+    }
+
+    .icon {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: none;
+    }
+
+    .sidebar {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      border-right: 1px solid var(--line-soft);
+      background: var(--rail);
+    }
+
+    .sidebar__top {
+      padding: 12px 12px 8px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .workspace-title {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    .workspace-title span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .session-path {
+      margin-top: 5px;
+      color: var(--dim);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-list {
+      min-width: 0;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    .nav-row {
+      width: 100%;
+      min-height: 34px;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .nav-row:hover,
+    .nav-row[data-active="true"] {
+      background: #2a2a2a;
+      color: var(--text);
+    }
+
+    .nav-row__label,
+    .git-entry__main,
+    .git-entry__meta,
+    .branch-name,
+    .file-path,
+    .log-subject,
+    .log-meta {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .count {
+      min-width: 20px;
+      height: 18px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      background: #353532;
+      color: var(--muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sidebar__footer {
+      padding: 8px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .git-entry {
+      width: 100%;
+      min-height: 46px;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border-radius: 8px;
+      background: var(--green-bg);
+      color: var(--text);
+      padding: 7px 8px;
+      text-align: left;
+    }
+
+    .git-entry:hover {
+      background: rgba(71, 209, 140, .18);
+    }
+
+    .git-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #286146;
+      color: #eafff4;
+      font-weight: 750;
+      font-size: 12px;
+    }
+
+    .git-entry__main {
+      font-weight: 650;
+    }
+
+    .git-entry__meta {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .git-entry__pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 5px rgba(71, 209, 140, .13);
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 42px minmax(0, 1fr);
+      background: var(--app);
+    }
+
+    .titlebar {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line-soft);
+      background: #1b1b1b;
+    }
+
+    .crumbs {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .crumbs strong {
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 650;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tool-separator {
+      width: 1px;
+      height: 20px;
+      margin: 0 5px;
+      background: var(--line);
+    }
+
+    .workbench {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+    }
+
+    .git-panel {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      border-right: 1px solid var(--line-soft);
+      background: var(--panel);
+    }
+
+    .git-header {
+      padding: 13px 14px 11px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .repo-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .repo-name {
+      min-width: 0;
+      font-size: 18px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .state-chip {
+      height: 24px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      background: var(--green-bg);
+      color: #bdf7d8;
+      font-size: 12px;
+      flex: none;
+    }
+
+    .state-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .repo-meta {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .branch-pill {
+      min-width: 0;
+      height: 26px;
+      border-radius: 7px;
+      display: inline-grid;
+      grid-template-columns: 17px minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+      background: #303030;
+      color: var(--text);
+      padding: 0 8px;
+    }
+
+    .ahead-behind {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--dim);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+      padding: 8px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .tab {
+      min-width: 0;
+      height: 31px;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tab:hover,
+    .tab[data-active="true"] {
+      background: #303030;
+      color: var(--text);
+    }
+
+    .changes {
+      min-height: 0;
+      overflow: auto;
+      padding: 9px 8px 10px;
+    }
+
+    .group {
+      margin-bottom: 12px;
+    }
+
+    .group-header {
+      height: 26px;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .file-row {
+      min-width: 0;
+      min-height: 32px;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      border-radius: 7px;
+      padding: 5px 6px;
+      color: var(--text);
+    }
+
+    .file-row:hover,
+    .file-row[data-selected="true"] {
+      background: #313131;
+    }
+
+    .file-status {
+      width: 24px;
+      height: 22px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 750;
+      font-family: "Cascadia Mono", Consolas, monospace;
+    }
+
+    .file-status[data-kind="modified"] {
+      background: var(--blue-bg);
+      color: #bcd1ff;
+    }
+
+    .file-status[data-kind="added"] {
+      background: var(--green-bg);
+      color: #bdf7d8;
+    }
+
+    .file-status[data-kind="deleted"] {
+      background: var(--red-bg);
+      color: #ffc2c2;
+    }
+
+    .file-status[data-kind="renamed"] {
+      background: var(--violet-bg);
+      color: #d8c6ff;
+    }
+
+    .file-status[data-kind="conflict"] {
+      background: var(--red-bg);
+      color: #ffc2c2;
+    }
+
+    .file-path {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .file-detail {
+      margin-top: 2px;
+      color: var(--dim);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: .72;
+    }
+
+    .file-row:hover .file-actions,
+    .file-row[data-selected="true"] .file-actions {
+      opacity: 1;
+    }
+
+    .commit-box {
+      border-top: 1px solid var(--line-soft);
+      padding: 10px;
+      background: #202020;
+    }
+
+    .commit-box textarea {
+      width: 100%;
+      height: 74px;
+      min-height: 74px;
+      max-height: 120px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #181818;
+      color: var(--text);
+      padding: 9px 10px;
+      caret-color: var(--focus);
+    }
+
+    .commit-box textarea::placeholder {
+      color: #999992;
+    }
+
+    .commit-actions {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .commit-hint {
+      color: var(--dim);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .command-button {
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #325f45;
+      color: #f1fff7;
+      padding: 0 12px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
+    }
+
+    .command-button:hover {
+      background: #3b7352;
+    }
+
+    .content {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) 188px;
+      background: var(--app);
+    }
+
+    .diff-view {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .diff-header {
+      min-width: 0;
+      height: 45px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line-soft);
+      background: #1e1e1e;
+    }
+
+    .diff-title {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .diff-title strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 650;
+    }
+
+    .diff-grid {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      background: #171717;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .diff-pane {
+      min-width: 0;
+      border-right: 1px solid var(--line-soft);
+    }
+
+    .diff-pane:last-child {
+      border-right: 0;
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      min-height: 25px;
+      align-items: center;
+    }
+
+    .line-no {
+      color: #686862;
+      text-align: right;
+      padding-right: 10px;
+      user-select: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .code {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: pre;
+      padding: 4px 10px;
+    }
+
+    .code-row[data-kind="add"] {
+      background: rgba(71, 209, 140, .1);
+    }
+
+    .code-row[data-kind="del"] {
+      background: rgba(242, 109, 109, .11);
+    }
+
+    .code-row[data-kind="hunk"] {
+      background: rgba(121, 167, 255, .09);
+      color: #bcd1ff;
+    }
+
+    .bottom {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(260px, .95fr) minmax(300px, 1.15fr);
+      border-top: 1px solid var(--line-soft);
+      background: var(--panel);
+    }
+
+    .branches,
+    .log {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+    }
+
+    .branches {
+      border-right: 1px solid var(--line-soft);
+    }
+
+    .section-title {
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+
+    .branch-row {
+      min-width: 0;
+      min-height: 31px;
+      display: grid;
+      grid-template-columns: 19px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      border-radius: 7px;
+      padding: 4px 6px;
+      margin-top: 2px;
+    }
+
+    .branch-row:hover,
+    .branch-row[data-active="true"] {
+      background: #303030;
+    }
+
+    .branch-name {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .branch-meta {
+      color: var(--dim);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .log-row {
+      min-width: 0;
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      border-radius: 7px;
+      padding: 5px 6px;
+      margin-top: 3px;
+    }
+
+    .log-row:hover,
+    .log-row[data-selected="true"] {
+      background: #303030;
+    }
+
+    .graph {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background:
+        radial-gradient(circle at 50% 25%, var(--green) 0 3px, transparent 4px),
+        linear-gradient(90deg, transparent 12px, #63635d 13px 15px, transparent 16px),
+        radial-gradient(circle at 50% 74%, var(--blue) 0 3px, transparent 4px);
+    }
+
+    .log-subject {
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .log-meta {
+      margin-top: 2px;
+      color: var(--dim);
+      font-size: 11px;
+    }
+
+    .hash {
+      color: var(--dim);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .status-strip {
+      position: fixed;
+      left: 314px;
+      right: 0;
+      bottom: 0;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 10px;
+      background: #1c1c1c;
+      border-top: 1px solid var(--line-soft);
+      color: var(--dim);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .status-strip strong {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        height: auto;
+        grid-template-columns: 52px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        min-height: 100vh;
+      }
+
+      .workbench,
+      .content,
+      .bottom {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .git-panel,
+      .branches {
+        border-right: 0;
+      }
+
+      .diff-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status-strip {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    THESIS: DSH Git should feel like an IDE workbench, not a sidebar widget; the default narrow list expands into a composed changes, diff, branch, log, and commit surface.
+    OWN-WORLD: Charcoal IDE chrome, dense rows, small radii, real status color, monospaced paths and hashes, toolbar icons, and calm panels built for repeated work.
+    STORY: The user sees repository health, selects a change, reviews the diff, stages or reverts deliberately, writes a commit, then moves to branch or history without changing mental context.
+    FIRST VIEWPORT: Sidebar Git entry anchors the source of truth; the main workbench places changes left, diff center, branch/log context below, and commit controls close to the file list.
+    FORM: Operate-mode design preview for the planned dsh-rebased Git plugin, derived from ROADMAP.md and current client.js sidebar integration.
+  -->
+  <div class="app-shell">
+    <aside class="activity" aria-label="DSH activity">
+      <button class="icon-button" title="会话" aria-label="会话">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"></path></svg>
+      </button>
+      <button class="icon-button" title="文件" aria-label="文件">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h6l2 3h8v13H4z"></path></svg>
+      </button>
+      <button class="icon-button" data-active="true" title="Git" aria-label="Git">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 0 0 4 4h4"></path><path d="M6 21v-6a4 4 0 0 1 4-4h8"></path><circle cx="6" cy="3" r="2"></circle><circle cx="6" cy="21" r="2"></circle><circle cx="18" cy="11" r="2"></circle></svg>
+      </button>
+      <div class="activity__spacer"></div>
+      <button class="icon-button" data-alert="true" title="通知" aria-label="通知">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+      </button>
+    </aside>
+
+    <aside class="sidebar" aria-label="DSH sidebar">
+      <div class="sidebar__top">
+        <div class="workspace-title">
+          <span>dsh-rebased</span>
+          <button class="icon-button" title="更多" aria-label="更多">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
+          </button>
+        </div>
+        <div class="session-path">D:\AI\dsh-rebased\dsh-rebased</div>
+      </div>
+      <div class="sidebar-list">
+        <button class="nav-row">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h12M4 18h8"></path></svg>
+          <span class="nav-row__label">最近会话</span>
+          <span class="count">3</span>
+        </button>
+        <button class="nav-row" data-active="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h5"></path></svg>
+          <span class="nav-row__label">插件开发</span>
+          <span class="count">1</span>
+        </button>
+        <button class="nav-row">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10"></path></svg>
+          <span class="nav-row__label">工具</span>
+          <span class="count">5</span>
+        </button>
+      </div>
+      <div class="sidebar__footer">
+        <button class="git-entry" aria-label="Git: feature/git-panel, 9 个改动">
+          <span class="git-mark">G</span>
+          <span>
+            <span class="git-entry__main">Git</span>
+            <span class="git-entry__meta">feature/git-panel · 9 个改动</span>
+          </span>
+          <span class="git-entry__pulse" aria-hidden="true"></span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="titlebar">
+        <div class="crumbs">
+          <strong>Git Changes</strong>
+          <span>/</span>
+          <span>D:\AI\dsh-rebased\dsh-rebased</span>
+        </div>
+        <div class="toolbar" aria-label="Git toolbar">
+          <button class="icon-button" title="刷新" aria-label="刷新">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"></path><path d="M4 18v-6h6"></path><path d="M18 10a6 6 0 0 0-10-4L4 10"></path><path d="M6 14a6 6 0 0 0 10 4l4-4"></path></svg>
+          </button>
+          <button class="icon-button" title="拉取" aria-label="拉取">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v14"></path><path d="M7 12l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+          </button>
+          <button class="icon-button" title="推送" aria-label="推送">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 21V7"></path><path d="M7 12l5-5 5 5"></path><path d="M5 3h14"></path></svg>
+          </button>
+          <span class="tool-separator"></span>
+          <button class="icon-button" title="设置" aria-label="设置">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"></path><path d="M4 12h2m12 0h2M12 4v2m0 12v2M6.3 6.3l1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4m-8.6 8.6-1.4 1.4"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="workbench">
+        <section class="git-panel" aria-label="Git workbench panel">
+          <div class="git-header">
+            <div class="repo-line">
+              <div class="repo-name">dsh-rebased</div>
+              <span class="state-chip"><span class="state-dot"></span> 可提交</span>
+            </div>
+            <div class="repo-meta">
+              <span class="branch-pill">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M7 4v12a4 4 0 0 0 4 4h6"></path><circle cx="7" cy="4" r="2"></circle><circle cx="17" cy="20" r="2"></circle></svg>
+                <span class="branch-name">feature/git-panel</span>
+              </span>
+              <span class="ahead-behind">↑ 2 ↓ 1</span>
+            </div>
+          </div>
+
+          <nav class="tabs" aria-label="Git panel views">
+            <button class="tab" data-active="true">变更</button>
+            <button class="tab">提交</button>
+            <button class="tab">分支</button>
+            <button class="tab">日志</button>
+          </nav>
+
+          <div class="changes">
+            <section class="group">
+              <div class="group-header">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M8 12h8"></path></svg>
+                <span>已暂存</span>
+                <span class="count">3</span>
+              </div>
+              <div class="file-row" data-selected="true">
+                <span class="file-status" data-kind="modified">M</span>
+                <span>
+                  <span class="file-path">lib/client.js</span>
+                  <span class="file-detail">ChangesPanel · toolbar integration</span>
+                </span>
+                <span class="file-actions">
+                  <button class="icon-button" title="取消暂存" aria-label="取消暂存"><svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"></path></svg></button>
+                  <button class="icon-button" title="打开差异" aria-label="打开差异"><svg class="icon" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg></button>
+                </span>
+              </div>
+              <div class="file-row">
+                <span class="file-status" data-kind="added">A</span>
+                <span>
+                  <span class="file-path">lib/core/staging.js</span>
+                  <span class="file-detail">new operation boundary</span>
+                </span>
+                <span class="file-actions">
+                  <button class="icon-button" title="取消暂存" aria-label="取消暂存"><svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"></path></svg></button>
+                </span>
+              </div>
+            </section>
+
+            <section class="group">
+              <div class="group-header">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+                <span>未暂存</span>
+                <span class="count">4</span>
+              </div>
+              <div class="file-row">
+                <span class="file-status" data-kind="modified">M</span>
+                <span>
+                  <span class="file-path">README.md</span>
+                  <span class="file-detail">manual test checklist</span>
+                </span>
+                <span class="file-actions">
+                  <button class="icon-button" title="暂存" aria-label="暂存"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+                  <button class="icon-button" title="回滚" aria-label="回滚"><svg class="icon" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h11a5 5 0 0 1 0 10h-1"></path></svg></button>
+                </span>
+              </div>
+              <div class="file-row">
+                <span class="file-status" data-kind="renamed">R</span>
+                <span>
+                  <span class="file-path">lib/ui/git-panel.js</span>
+                  <span class="file-detail">lib/ui-model/sidebar.js</span>
+                </span>
+                <span class="file-actions">
+                  <button class="icon-button" title="暂存" aria-label="暂存"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+                </span>
+              </div>
+            </section>
+
+            <section class="group">
+              <div class="group-header">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"></path></svg>
+                <span>冲突</span>
+                <span class="count">1</span>
+              </div>
+              <div class="file-row">
+                <span class="file-status" data-kind="conflict">UU</span>
+                <span>
+                  <span class="file-path">lib/core/repository.js</span>
+                  <span class="file-detail">merge markers detected</span>
+                </span>
+                <span class="file-actions">
+                  <button class="icon-button" title="解决冲突" aria-label="解决冲突"><svg class="icon" viewBox="0 0 24 24"><path d="M7 8h10M7 16h10M9 4l6 16"></path></svg></button>
+                </span>
+              </div>
+            </section>
+          </div>
+
+          <div class="commit-box">
+            <textarea spellcheck="false" placeholder="提交信息">Add staging model and Git workbench panel</textarea>
+            <div class="commit-actions">
+              <span class="commit-hint">3 个文件已暂存 · 作者来自 Git config</span>
+              <button class="command-button">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+                提交
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="content" aria-label="Git detail area">
+          <section class="diff-view">
+            <div class="diff-header">
+              <div class="diff-title">
+                <span class="file-status" data-kind="modified">M</span>
+                <strong>lib/client.js</strong>
+              </div>
+              <div class="toolbar">
+                <button class="icon-button" title="上一处" aria-label="上一处"><svg class="icon" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"></path></svg></button>
+                <button class="icon-button" title="下一处" aria-label="下一处"><svg class="icon" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button>
+                <button class="icon-button" title="暂存此块" aria-label="暂存此块"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+              </div>
+            </div>
+            <div class="diff-grid">
+              <div class="diff-pane" aria-label="before">
+                <div class="code-row" data-kind="hunk"><span class="line-no">142</span><span class="code">@@ ChangesPanel @@</span></div>
+                <div class="code-row"><span class="line-no">143</span><span class="code">function openChangesTab(ctx, scope) {</span></div>
+                <div class="code-row" data-kind="del"><span class="line-no">144</span><span class="code">  refresh();</span></div>
+                <div class="code-row" data-kind="del"><span class="line-no">145</span><span class="code">  openPopover(scope);</span></div>
+                <div class="code-row"><span class="line-no">146</span><span class="code">}</span></div>
+                <div class="code-row"><span class="line-no">147</span><span class="code"></span></div>
+                <div class="code-row"><span class="line-no">148</span><span class="code">function ChangeRow(props) {</span></div>
+                <div class="code-row"><span class="line-no">149</span><span class="code">  const change = props.change;</span></div>
+              </div>
+              <div class="diff-pane" aria-label="after">
+                <div class="code-row" data-kind="hunk"><span class="line-no">142</span><span class="code">@@ ChangesPanel @@</span></div>
+                <div class="code-row"><span class="line-no">143</span><span class="code">function openChangesTab(ctx, scope) {</span></div>
+                <div class="code-row" data-kind="add"><span class="line-no">144</span><span class="code">  const service = optionalBetterSidebar(ctx);</span></div>
+                <div class="code-row" data-kind="add"><span class="line-no">145</span><span class="code">  return service.openTab({ type, title }, scope);</span></div>
+                <div class="code-row"><span class="line-no">146</span><span class="code">}</span></div>
+                <div class="code-row"><span class="line-no">147</span><span class="code"></span></div>
+                <div class="code-row"><span class="line-no">148</span><span class="code">function ChangeRow(props) {</span></div>
+                <div class="code-row"><span class="line-no">149</span><span class="code">  const change = props.change;</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="bottom" aria-label="Branch and log context">
+            <div class="branches">
+              <div class="section-title">
+                <span>分支</span>
+                <span class="count">8</span>
+              </div>
+              <div class="branch-row" data-active="true">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+                <span class="branch-name">feature/git-panel</span>
+                <span class="branch-meta">↑2 ↓1</span>
+              </div>
+              <div class="branch-row">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M7 4v12a4 4 0 0 0 4 4h6"></path></svg>
+                <span class="branch-name">main</span>
+                <span class="branch-meta">origin</span>
+              </div>
+              <div class="branch-row">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M7 4v12a4 4 0 0 0 4 4h6"></path></svg>
+                <span class="branch-name">fix/startup-load</span>
+                <span class="branch-meta">merged</span>
+              </div>
+              <div class="branch-row">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M7 4v12a4 4 0 0 0 4 4h6"></path></svg>
+                <span class="branch-name">origin/main</span>
+                <span class="branch-meta">remote</span>
+              </div>
+            </div>
+
+            <div class="log">
+              <div class="section-title">
+                <span>日志</span>
+                <span class="count">24</span>
+              </div>
+              <div class="log-row" data-selected="true">
+                <span class="graph"></span>
+                <span>
+                  <span class="log-subject">Add read-only changes model</span>
+                  <span class="log-meta">You · 2026-08-25 · feature/git-panel</span>
+                </span>
+                <span class="hash">a13f42c</span>
+              </div>
+              <div class="log-row">
+                <span class="graph"></span>
+                <span>
+                  <span class="log-subject">Wire better-sidebar tab registration</span>
+                  <span class="log-meta">You · 2026-08-25 · main</span>
+                </span>
+                <span class="hash">8bd1e90</span>
+              </div>
+              <div class="log-row">
+                <span class="graph"></span>
+                <span>
+                  <span class="log-subject">Detect repository state from active session</span>
+                  <span class="log-meta">You · 2026-08-25 · main</span>
+                </span>
+                <span class="hash">5f102aa</span>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+    <div class="status-strip">
+      <span><strong>Git:</strong> feature/git-panel · 3 staged · 4 unstaged · 1 conflict</span>
+      <span><strong>Remote:</strong> origin · fetch 2m ago · push available</span>
+    </div>
+  </div>
+</body>
+</html>
